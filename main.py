@@ -1,33 +1,25 @@
-from icalendar import Calendar, Event
-import re
+from flask import Flask, render_template, request, send_file
+from werkzeug.utils import secure_filename
+import os
+from location import add_location_to_ical
+# ... (reszta kodu)
 
-def add_location_to_ical(ical_file, output_file):
-    """
-    Dodaje parametr LOCATION do wydarzeń w pliku iCalendar,
-    wyciągając wartość z pola "Sala". Używa wyrażenia regularnego
-    dla bardziej elastycznego parsowania.
+app = Flask(__name__)
 
-    Args:
-        ical_file (str): Ścieżka do pliku wejściowego.
-        output_file (str): Ścieżka do pliku wyjściowego.
-    """
-
-    with open(ical_file, 'rb') as f:
-        cal = Calendar.from_ical(f.read())
-
-    for component in cal.walk():
-        if component.name == "VEVENT":
-            description = component.get('DESCRIPTION')
-            # Wyrażenie regularne: dopasuj "Sala:" z dowolną liczbą spacji i dowolną wartością
-            match = re.search(r"Sala:\s*(.*)", description, re.IGNORECASE)
-            if match:
-                location = match.group(1).strip()
-                component.add('location', location)
-
-    with open(output_file, 'wb') as f:
-        f.write(cal.to_ical())
-
-# Przykład użycia
-ical_file = "Plany.ics"
-output_file = "moj_plan_z_lokalizacja.ics"
-add_location_to_ical(ical_file, output_file)
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return 'No file part'
+        file = request.files['file']
+        if file.filename == '':
+            return 'No selected file'
+        if file:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            # Wywołaj funkcję przetwarzania pliku
+            output_file = "output.ics"
+            add_location_to_ical(filepath, output_file)
+            return send_file(output_file, as_attachment=True)
+    return render_template('index.html')

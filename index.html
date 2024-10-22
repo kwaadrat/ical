@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Konwerter plików iCalendar</title>
+    <style>
+        body {
+            background-color: #2a2828; /* Tło w jasnoszarym kolorze */
+            font-family: Arial, sans-serif;
+            text-align: center; /* Wyśrodkowanie zawartości */
+        }
+
+        form {
+            background-color: #1b1818; /* Białe tło dla formularza */
+            padding: 20px;
+            border-radius: 10px; /* Zaokrąglone rogi */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Cień dla formularza */
+            margin: 0 auto; /* Wyśrodkowanie formularza */
+            max-width: 400px;
+        }
+
+        input[type="file"],
+        input[type="submit"] {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #6d6d6d;
+            color: #333;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #bbb;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Konwerter plików iCalendar</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Prześlij plik">
+    </form>
+</body>
+</html>
