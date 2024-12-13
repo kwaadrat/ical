@@ -1,12 +1,19 @@
-from flask import Flask, render_template, request, send_file
-from werkzeug.utils import secure_filename
+from flask import Flask, request, send_from_directory
 import os
-from location import add_location_to_ical
-# ... (reszta kodu)
+import location
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
+# Konfiguracja katalogu do przechowywania plików iCalendar
+UPLOAD_FOLDER = 'ical'
+ALLOWED_EXTENSIONS = {'ics'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/ical', methods=['POST'])  # Zmieniliśmy ścieżkę na '/ical'
 def upload_file():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -14,12 +21,24 @@ def upload_file():
         file = request.files['file']
         if file.filename == '':
             return 'No selected file'
-        if file:
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            # Wywołaj funkcję przetwarzania pliku
-            output_file = "output.ics"
-            add_location_to_ical(filepath, output_file)
-            return send_file(output_file, as_attachment=True)
-    return render_template('index.html')
+        if file and allowed_file(file.filename):
+            filename = file.filename
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+
+            # Wywołanie funkcji z location.py
+            output_file = location.add_location(file_path)
+
+            return send_from_directory(app.config['UPLOAD_FOLDER'], output_file, as_attachment=True)
+    return '''
+    <!doctype html>
+    <title>upload new file</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+        <input type=file name=file>
+        <input type=submit value=Upload>
+    </form>
+    '''
+
+if __name__ == '__main__':
+    app.run(host='::', port=8080, debug=True)
